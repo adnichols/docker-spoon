@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+echo Entering runit 1
+logger Starting runit 1
+echo In Runit 1 > /dev/console
