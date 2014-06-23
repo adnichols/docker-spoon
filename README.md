@@ -3,6 +3,8 @@
 Spoon with another developer using Docker & tmux. This is being ported
 from another project and is functionaly incomplete right now
 
+In the mean time - [learn more about spooning](https://www.youtube.com/watch?v=dYBjVTMUQY0)
+
 ## Installation
 
 ```
