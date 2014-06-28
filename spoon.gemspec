@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'spoon/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "spoon"
+  spec.name          = "docker-spoon"
   spec.version       = Spoon::VERSION
   spec.authors       = ["Aaron Nichols"]
   spec.email         = ["anichols@trumped.org"]

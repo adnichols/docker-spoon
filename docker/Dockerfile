@@ -44,6 +44,8 @@ RUN useradd -s /bin/zsh -m -d /home/pairing -g root pairing
 RUN echo "pairing:pairing" | chpasswd
 RUN echo "pairing        ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+ADD resources/zshrc.default /home/pairing/.zshrc
+
 RUN mkdir /home/pairing/projects
 
 EXPOSE 22

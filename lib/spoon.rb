@@ -12,11 +12,11 @@ module Spoon
 
   main do |instance|
     parse_config(options[:config])
-    pp options
+    D options.inspect
     if options[:list]
       instance_list
-    elsif options["list-containers"]
-      # container_list
+    elsif options["list-images"]
+      image_list
     elsif options[:build]
       image_build
     elsif options[:destroy]
@@ -37,10 +37,12 @@ module Spoon
   on("-b", "--build", "Build image from Dockerfile using name passed to --image")
 
   # Configurables
-  on("--builddir", "Directory containing Dockerfile")
+  options[:builddir] = '.'
+  on("--builddir DIR", "Directory containing Dockerfile")
   on("--pre-build-commands", "List of commands to run locally before building image")
+  options[:url] = Docker.url
   on("-u", "--url URL", "Docker url to connect to")
-  on("-L", "--list-containers", "List available spoon container images")
+  on("-L", "--list-images", "List available spoon images")
   options[:image] = "spoon-pairing"
   on("-i", "--image NAME", "Use image for spoon instance")
   options[:prefix] = 'spoon-'
@@ -77,9 +79,18 @@ module Spoon
     end
     D "pre-build commands complete, building Docker image"
 
+    docker_url
     build_opts = { 't' => options[:image], 'rm' => true }
-    Docker::Image.build_from_dir(options[:build], build_opts) do |chunk|
+    Docker::Image.build_from_dir(options[:builddir], build_opts) do |chunk|
       print_docker_response(chunk)
+    end
+  end
+
+  def self.image_list
+    docker_url
+    Docker::Image.all.each do |image|
+      next if image.info["RepoTags"] == ["<none>:<none>"]
+      puts "Image: #{image.info["RepoTags"]}"
     end
   end
 
@@ -130,7 +141,6 @@ module Spoon
 
   def self.instance_destroy(name)
     docker_url
-    puts "destroy: #{name}"
     container = get_container(name)
 
     if container
