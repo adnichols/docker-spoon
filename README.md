@@ -16,8 +16,6 @@ Spoon is intended to make this process as easy as possible.
 #### Why Spoon?
 [Learn more about spooning](https://www.youtube.com/watch?v=dYBjVTMUQY0)
 
-In the mean time - [learn more about spooning](https://www.youtube.com/watch?v=dYBjVTMUQY0)
-
 ## Installation
 
 ```
