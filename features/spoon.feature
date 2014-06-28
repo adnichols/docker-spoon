@@ -10,4 +10,14 @@ Feature: My bootstrapped app kinda works
     And the banner should document that this app takes options
     And the following options should be documented:
       |--version|
-    And the banner should document that this app takes no arguments
+      |--list|
+      |--destroy|
+      |--build|
+      |--builddir|
+      |--pre-build-commands|
+      |--url|
+      |--list-images|
+      |--image|
+      |--prefix|
+      |--config|
+      |--debug|
