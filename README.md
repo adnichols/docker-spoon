@@ -149,9 +149,9 @@ options["pre-build-commands"] = [
 
 #### Container expectations
 
-When building a container for use with docker-spoon you must build a
-container which runs an ssh daemon. An example of a Dockerfile which
-creates a container which runs ssh is included in the `docker/`
+When building an image for use with docker-spoon you must build an
+image which runs an ssh daemon. An example of a Dockerfile which
+creates an image which runs ssh is included in the `docker/`
 directory inside this repository
 
 ## Contributing
