@@ -76,7 +76,7 @@ module Spoon
     # Run pre-build commands
     options["pre-build-commands"].each do |command|
       sh command
-    end
+    end unless options["pre-build-commands"].nil?
     D "pre-build commands complete, building Docker image"
 
     docker_url
