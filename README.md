@@ -49,11 +49,12 @@ argument.
 
 ## Usage
 
-Spoon has 4 major operations it can perform:
+Spoon has 5 major operations it can perform:
 
 - Connect/Create, Connect to an existing spoon container or create a new
   container
 - List, List existing containers
+- Network, Show ports forwarded to existing containers
 - Build, Build an image for use as a spoon container
 - Destroy, Destroy an existing spoon container
 
