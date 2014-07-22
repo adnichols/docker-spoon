@@ -20,7 +20,6 @@ module Spoon
     elsif options[:build]
       image_build
     elsif options[:destroy]
-      puts options
       instance_destroy(apply_prefix(options[:destroy]))
     elsif options[:network]
       instance_network(apply_prefix(options[:network]))
