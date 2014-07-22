@@ -20,7 +20,10 @@ module Spoon
     elsif options[:build]
       image_build
     elsif options[:destroy]
+      puts options
       instance_destroy(apply_prefix(options[:destroy]))
+    elsif options[:network]
+      instance_network(apply_prefix(options[:network]))
     elsif instance
       instance_connect(apply_prefix(instance), options[:command])
     else
@@ -35,6 +38,7 @@ module Spoon
   on("-l", "--list", "List available spoon instances")
   on("-d", "--destroy NAME", "Destroy spoon instance with NAME")
   on("-b", "--build", "Build image from Dockerfile using name passed to --image")
+  on("-n", "--network NAME", "Display exposed ports using name passed to NAME")
 
   # Configurables
   options[:builddir] = '.'
@@ -136,6 +140,18 @@ module Spoon
       if name.start_with? "/#{options[:prefix]}"
         puts remove_prefix(name)
       end
+    end
+  end
+
+  def self.instance_network(name)
+    docker_url
+
+    container = get_container(name)
+    
+    ports = container.json['NetworkSettings']['Ports']
+    ports.each do |name, port|
+      tcp_name = name.split('/')[0]
+      puts "#{tcp_name} -> #{port.first['HostPort']}"
     end
   end
 
