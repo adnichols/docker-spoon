@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["anichols@trumped.org"]
   spec.summary       = %q{Create on-demand pairing environments in Docker}
   spec.description   = %q{Create on-demand pairing environments in Docker}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/adnichols/docker-spoon"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
