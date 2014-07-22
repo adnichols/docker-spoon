@@ -18,6 +18,7 @@ Feature: My bootstrapped app kinda works
       |--url|
       |--list-images|
       |--image|
+      |--network|
       |--prefix|
       |--config|
       |--debug|

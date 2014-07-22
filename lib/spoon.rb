@@ -1,7 +1,6 @@
 require "spoon/version"
 require 'docker'
 require 'json'
-require 'pp'
 require 'uri'
 
 module Spoon
@@ -126,6 +125,11 @@ module Spoon
       instance_create(name)
     end
 
+    container = get_container(name)
+    unless is_running?(container)
+      instance_start(container)
+    end
+
     puts "Connecting to `#{name}`"
     instance_ssh(name, command)
   end
@@ -133,12 +137,31 @@ module Spoon
   def self.instance_list
     docker_url
     puts "List of available spoon containers:"
-    container_list = Docker::Container.all
+    container_list = get_all_containers
     container_list.each do |container|
       name = container.info["Names"].first.to_s
       if name.start_with? "/#{options[:prefix]}"
-        puts remove_prefix(name)
+        running = is_running?(container) ? "Running" : "Stopped"
+        puts "#{remove_prefix(name)} [ #{running} ]".rjust(40)
       end
+    end
+  end
+
+  def self.strip_slash(name)
+    if name.start_with? "/"
+      name[1..-1]
+    else
+      name
+    end
+  end
+
+  def self.is_running?(container)
+    container = Docker::Container.get(container.info["id"])
+    status = container.info["State"]["Running"] || nil
+    unless status.nil?
+      return status
+    else
+      return false
     end
   end
 
@@ -146,11 +169,15 @@ module Spoon
     docker_url
 
     container = get_container(name)
-    
-    ports = container.json['NetworkSettings']['Ports']
-    ports.each do |name, port|
-      tcp_name = name.split('/')[0]
-      puts "#{tcp_name} -> #{port.first['HostPort']}"
+
+    if is_running?(container)
+      ports = container.json['NetworkSettings']['Ports']
+      ports.each do |p_name, p_port|
+        tcp_name = p_name.split('/')[0]
+        puts "#{tcp_name} -> #{p_port.first['HostPort']}"
+      end
+    else
+      puts "Container is not running, cannot show ports"
     end
   end
 
@@ -196,12 +223,25 @@ module Spoon
     end
   end
 
+  def self.get_all_containers
+    Docker::Container.all(:all => true)
+  end
+
+  def self.get_running_containers
+    Docker::Container.all
+  end
+
+  def self.instance_start(container)
+    container.start!
+  end
+
   def self.get_container(name)
     docker_url
-    container_list = Docker::Container.all
+    container_list = get_all_containers
 
+    l_name = strip_slash(name)
     container_list.each do |container|
-      if container.info["Names"].first.to_s == "/#{name}"
+      if container.info["Names"].first.to_s == "/#{l_name}"
         return container
       end
     end
