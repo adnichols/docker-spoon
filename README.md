@@ -81,6 +81,10 @@ Connecting to `spoon-fortesting`
 pairing@dockerhost's password:
 ```
 
+NOTE: If a container has been stopped due to a machine restart or other
+reason, spoon will issue a start to the container & then attempt to ssh
+in.
+
 #### Options
 
 - `--url`, The url of the Docker API endpoint. This is in the format
@@ -101,8 +105,13 @@ can see only the containers you are interested in.
 ```shell
 $ spoon -l
 List of available spoon containers:
-fortesting
+                      booger [ Stopped ]
+                        jake [ Running ]
+                        test [ Stopped ]
 ```
+
+You can connect to Stopped containers in the same way as Running
+containers, spoon will re-start them as necessary.
 
 ### Destroy
 
@@ -112,6 +121,19 @@ The `--destroy NAME` option will destroy the specified spoon container.
 $ spoon -d fortesting
 Destroying spoon-fortesting
 Done!
+```
+
+### Network
+
+The `--network NAME` option will show the forwarded ports for a spoon
+instance. Any ports listed via `EXPOSE` in your Dockerfile should be
+exposed when a spoon container is started. If you are working with
+applications in a spoon container you can use this to forward ports &
+view what public ports are forwarded for your spoon container.
+
+```
+$ spoon -n jake
+22 -> 49213
 ```
 
 ### Build
