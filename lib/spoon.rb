@@ -2,6 +2,7 @@ require "spoon/version"
 require 'docker'
 require 'json'
 require 'uri'
+require 'rainbow'
 
 module Spoon
   include Methadone::Main
@@ -141,7 +142,7 @@ module Spoon
     container_list.each do |container|
       name = container.info["Names"].first.to_s
       if name.start_with? "/#{options[:prefix]}"
-        running = is_running?(container) ? "Running" : "Stopped"
+        running = is_running?(container) ? Rainbow("Running").green : Rainbow("Stopped").red
         puts "#{remove_prefix(name)} [ #{running} ]".rjust(40)
       end
     end
