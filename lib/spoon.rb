@@ -11,7 +11,6 @@ module Spoon
   version(Spoon::VERSION)
 
   main do |instance|
-    parse_config(options[:config])
 
     D options.inspect
     if options[:list]
@@ -56,24 +55,19 @@ module Spoon
   on("-c", "--config FILE", "Config file to use for spoon options")
   on("--debug", "Enable debug")
 
+  # Read config file & set options
+  eval(File.open(options[:config]).read)
+
   arg(:instance, :optional, "Spoon instance to connect to")
 
   use_log_level_option
 
-  def self.parse_config(config_file)
-    eval(File.open(config_file).read)
-  end
-
   def self.apply_prefix(name)
-    "spoon-#{name}"
+    "#{options[:prefix]}#{name}"
   end
 
   def self.remove_prefix(name)
-    if name.start_with? "/"
-      name[7..-1]
-    else
-      name[6..-1]
-    end
+    name.gsub(/\/?#{options[:prefix]}/, '')
   end
 
   def self.image_build

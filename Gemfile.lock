@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    docker-spoon (0.3.0)
+    docker-spoon (0.4.0)
       docker-api (~> 1.11)
       methadone (~> 1.4.0)
       rainbow (~> 2.0)
