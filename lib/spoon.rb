@@ -12,6 +12,7 @@ module Spoon
 
   main do |instance|
     parse_config(options[:config])
+
     D options.inspect
     if options[:list]
       instance_list
@@ -84,7 +85,9 @@ module Spoon
 
     docker_url
     build_opts = { 't' => options[:image], 'rm' => true }
-    Docker::Image.build_from_dir(options[:builddir], build_opts) do |chunk|
+    docker_connection = ::Docker::Connection.new(options[:url], :read_timeout => 3000)
+
+    Docker::Image.build_from_dir(options[:builddir], build_opts, docker_connection) do |chunk|
       print_docker_response(chunk)
     end
   end
@@ -138,14 +141,19 @@ module Spoon
   def self.instance_list
     docker_url
     puts "List of available spoon containers:"
-    container_list = get_all_containers
+    container_list = get_all_containers.sort { |c1, c2| c1.info["Names"].first.to_s <=> c2.info["Names"].first.to_s }
     container_list.each do |container|
       name = container.info["Names"].first.to_s
       if name.start_with? "/#{options[:prefix]}"
         running = is_running?(container) ? Rainbow("Running").green : Rainbow("Stopped").red
-        puts "#{remove_prefix(name)} [ #{running} ]".rjust(40)
+        puts "#{remove_prefix(name)} [ #{running} ]".rjust(40) + " " + Rainbow(image_name(container)).yellow
       end
     end
+  end
+
+  def self.image_name(container)
+    env = Hash[container.json['Config']['Env'].collect { |v| v.split('=') }]
+    return env['IMAGE_NAME'] || container.json['Config']['Image'].split(':').first
   end
 
   def self.strip_slash(name)
