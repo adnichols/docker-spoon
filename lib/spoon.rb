@@ -135,13 +135,14 @@ module Spoon
   def self.instance_list
     docker_url
     puts "List of available spoon containers:"
-    container_list = get_all_containers.sort { |c1, c2| c1.info["Names"].first.to_s <=> c2.info["Names"].first.to_s }
+    container_list = get_all_containers.select { |c| c.info["Names"].first.to_s.start_with? "/#{options[:prefix]}" }
+                                       .sort { |c1, c2| c1.info["Names"].first.to_s <=> c2.info["Names"].first.to_s }
+    max_width_container_name = remove_prefix(container_list.max_by {|c| c.info["Names"].first.to_s.length }.info["Names"].first.to_s)
+    max_name_width = max_width_container_name.length
     container_list.each do |container|
       name = container.info["Names"].first.to_s
-      if name.start_with? "/#{options[:prefix]}"
-        running = is_running?(container) ? Rainbow("Running").green : Rainbow("Stopped").red
-        puts "#{remove_prefix(name)} [ #{running} ]".rjust(40) + " " + Rainbow(image_name(container)).yellow
-      end
+      running = is_running?(container) ? Rainbow("Running").green : Rainbow("Stopped").red
+      puts "#{remove_prefix(name)} [ #{running} ]".rjust(max_name_width + 22) + " " + Rainbow(image_name(container)).yellow
     end
   end
 
