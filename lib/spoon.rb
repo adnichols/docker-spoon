@@ -56,7 +56,9 @@ module Spoon
   on("--debug", "Enable debug")
 
   # Read config file & set options
-  eval(File.open(options[:config]).read)
+  if File.exists?(options[:config])
+    eval(File.open(options[:config]).read)
+  end
 
   arg(:instance, :optional, "Spoon instance to connect to")
 
