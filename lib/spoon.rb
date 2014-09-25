@@ -177,6 +177,8 @@ module Spoon
     container = get_container(name)
 
     if is_running?(container)
+      host = URI.parse(options[:url]).host
+      puts "Host: #{host}"
       ports = container.json['NetworkSettings']['Ports']
       ports.each do |p_name, p_port|
         tcp_name = p_name.split('/')[0]
