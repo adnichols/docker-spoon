@@ -12,6 +12,11 @@ module Spoon
 
   main do |instance|
 
+    # Read config file & set options
+    if File.exists?(options[:config])
+      eval(File.open(options[:config]).read)
+    end
+
     D options.inspect
     if options[:list]
       instance_list
@@ -43,6 +48,9 @@ module Spoon
   options[:builddir] = '.'
   on("--builddir DIR", "Directory containing Dockerfile")
   on("--pre-build-commands", "List of commands to run locally before building image")
+  # These are config only options
+  options[:copy_on_create] = []
+  options[:add_authorized_keys] = false
   options[:url] = Docker.url
   on("-u", "--url URL", "Docker url to connect to")
   on("-L", "--list-images", "List available spoon images")
@@ -52,13 +60,9 @@ module Spoon
   on("-p", "--prefix PREFIX", "Prefix for container names")
   options[:command] = ''
   options[:config] = "#{ENV['HOME']}/.spoonrc"
-  on("-c", "--config FILE", "Config file to use for spoon options")
+  on("-c FILE", "--config", "Config file to use for spoon options")
   on("--debug", "Enable debug")
 
-  # Read config file & set options
-  if File.exists?(options[:config])
-    eval(File.open(options[:config]).read)
-  end
 
   arg(:instance, :optional, "Spoon instance to connect to")
 
@@ -123,6 +127,8 @@ module Spoon
     if not instance_exists? name
       puts "The `#{name}` container doesn't exist, creating..."
       instance_create(name)
+      instance_copy_authorized_keys(name, options[:add_authorized_keys])
+      instance_copy_files(name)
     end
 
     container = get_container(name)
@@ -138,7 +144,7 @@ module Spoon
     docker_url
     puts "List of available spoon containers:"
     container_list = get_all_containers.select { |c| c.info["Names"].first.to_s.start_with? "/#{options[:prefix]}" }
-                                       .sort { |c1, c2| c1.info["Names"].first.to_s <=> c2.info["Names"].first.to_s }
+      .sort { |c1, c2| c1.info["Names"].first.to_s <=> c2.info["Names"].first.to_s }
     max_width_container_name = remove_prefix(container_list.max_by {|c| c.info["Names"].first.to_s.length }.info["Names"].first.to_s)
     max_name_width = max_width_container_name.length
     container_list.each do |container|
@@ -231,6 +237,36 @@ module Spoon
     end
   end
 
+  def self.instance_copy_authorized_keys(name, keyfile)
+    if keyfile
+      container = get_container(name)
+      host = URI.parse(options[:url]).host
+      key = File.read("#{ENV['HOME']}/.ssh/#{keyfile}")
+      if container
+        ssh_port = get_port('22', container)
+        puts "Waiting for #{name}:#{ssh_port}..." until host_available?(host, ssh_port)
+        system("ssh -t -o StrictHostKeyChecking=no -p #{ssh_port} pairing@#{host} \"mkdir -p .ssh && chmod 700 .ssh && echo '#{key}' >> ~/.ssh/authorized_keys\"")
+      else
+        puts "No container named: #{container.inspect}"
+      end
+    end
+  end
+
+  def self.instance_copy_files(name)
+    options[:copy_on_create].each do |file|
+      puts "Copying file #{file}"
+      container = get_container(name)
+      host = URI.parse(options[:url]).host
+      if container
+        ssh_port = get_port('22', container)
+        puts "Waiting for #{name}:#{ssh_port}..." until host_available?(host, ssh_port)
+        system("scp -o StrictHostKeyChecking=no -P #{ssh_port} #{ENV['HOME']}/#{file} pairing@#{host}:#{file}")
+      else
+        puts "No container named: #{container.inspect}"
+      end
+    end
+  end
+
   def self.get_all_containers
     Docker::Container.all(:all => true)
   end
@@ -297,7 +333,4 @@ module Spoon
   go!
 end
 
-  # option :debug, :type => :boolean, :default => true
-
-
-  # private
+# option :debug, :type => :boolean, :default => true
