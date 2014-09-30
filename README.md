@@ -1,7 +1,7 @@
 # docker-spoon
 
 ## Overview
-Spoon creates on demand pairing environments using Docker. 
+Spoon creates on demand pairing environments using Docker.
 
 We pair a lot using tmux & emacs / vim and wanted a way to create
 pairing environments which met a few criteria:
@@ -11,7 +11,7 @@ pairing environments which met a few criteria:
   environments and asking who's using what
 - Are console based to enable low latency remote pairing
 
-Spoon is intended to make this process as easy as possible. 
+Spoon is intended to make this process as easy as possible.
 
 #### Why Spoon?
 [Learn more about spooning](https://www.youtube.com/watch?v=dYBjVTMUQY0)
@@ -42,10 +42,10 @@ All of the `options[]` parameters should map directly to the long form
 of options on the command line. They may be defined as either the
 `:symbol` form or as a string. The limitation is that ruby doesn't
 permit a dash in symbols, so when an option has a dash in it, it must be
-specified as a string. 
+specified as a string.
 
 You may also specify a different config file with the `--config`
-argument. 
+argument.
 
 ## Usage
 
@@ -65,7 +65,7 @@ the spoon container that you specify. If that container doesn't exist,
 spoon will create it for you. Once spoon either creates a container or
 determines that one already exists it will start an ssh connection to
 the host. This will shell out to ssh and should honor your ssh
-configuration locally. 
+configuration locally.
 
 Example (container doesn't exist):
 ```shell
@@ -91,7 +91,7 @@ in.
 - `--url`, The url of the Docker API endpoint. This is in the format
   supported by the docker -H option. This will also read from the
   environment variable `DOCKER_HOST` if this argument is not specified
-  and that env var exists. 
+  and that env var exists.
 - `--image`, The image name to use when starting a spoon container.
 - `--prefix`, The prefix to use for creating, listing & destroying
   containers.
@@ -101,7 +101,7 @@ in.
 The `--list` argument will list any containers on the destination Docker
 host which have the same prefix as specified by `--prefix` (default
 'spoon-'). Images are listed without the prefix specified so that you
-can see only the containers you are interested in. 
+can see only the containers you are interested in.
 
 ```shell
 $ spoon -l
@@ -116,7 +116,7 @@ containers, spoon will re-start them as necessary.
 
 ### Destroy
 
-The `--destroy NAME` option will destroy the specified spoon container. 
+The `--destroy NAME` option will destroy the specified spoon container.
 
 ```shell
 $ spoon -d fortesting
@@ -143,12 +143,12 @@ The `--build` option will build a docker image from the build directory
 specified by `--builddir` (default '.'). This has the same expectations
 as the [docker
 build](https://docs.docker.com/reference/commandline/cli/#build)
-command. 
+command.
 
 #### Options
 
 - `--builddir`, This is the directory where the build process will look
-  for a Dockerfile and any content added to the container using `ADD`. 
+  for a Dockerfile and any content added to the container using `ADD`.
 
 - `--pre-build-commands`, This is a list of commands to run before
   actually kicking off the build process (see below).
@@ -161,13 +161,41 @@ copying stuff into the container which you don't want to have committed
 to the repository. An example of this is that in our environment we need
 chef credentials inside of our container & we use this mechanism to copy
 those credentials into the builddir at build time without adding them to
-our repository containing the Dockerfile. 
+our repository containing the Dockerfile.
 
 Here's an example of how we copy our chef configuration into place:
 ```ruby
 options["pre-build-commands"] = [
   "cp -rp #{ENV['HOME']}/.chef #{options[:builddir]}/chef"
 ]
+```
+
+- `copy_on_create`, - This is a config-only value, there is no command
+  line argument for it. The idea is that you can specify a list of files
+  to copy into place on the destination container upon creation. This is
+  useful if you want to copy in place configs that you keep on your
+  workstation but don't want them as part of the image.
+
+Example:
+```
+options[:copy_on_create] = [
+  ".gitconfig",
+  ".ssh",
+  ".ssh/config"
+]
+```
+NOTE: this does not create any required parent directories on the
+destination system unless they are copied into place, for example like
+the .ssh directory in the example above.
+
+- `add_authorized_keys` - This is a config-only value. This allows you
+  to specify an ssh public key that should reside in your own `~/.ssh`
+  directory to be placed in authorized_keys on the destination system
+  upon container creation.
+
+Example:
+```
+options[:add_authorized_keys] = "id_rsa.pub"
 ```
 
 #### Container expectations
