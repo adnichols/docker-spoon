@@ -12,11 +12,6 @@ module Spoon
 
   main do |instance|
 
-    # Read config file & set options
-    if File.exists?(options[:config])
-      eval(File.open(options[:config]).read)
-    end
-
     D options.inspect
     if options[:list]
       instance_list
@@ -45,22 +40,28 @@ module Spoon
   on("-n", "--network NAME", "Display exposed ports using name passed to NAME")
 
   # Configurables
-  options[:builddir] = '.'
+  options[:config] ||= "#{ENV['HOME']}/.spoonrc"
+  on("-c FILE", "--config", "Config file to use for spoon options")
+
+  # Read config file & set options
+  if File.exists?(options[:config])
+    eval(File.open(options[:config]).read)
+  end
+
+  options[:builddir] ||= '.'
   on("--builddir DIR", "Directory containing Dockerfile")
   on("--pre-build-commands", "List of commands to run locally before building image")
   # These are config only options
-  options[:copy_on_create] = []
-  options[:add_authorized_keys] = false
-  options[:url] = Docker.url
+  options[:copy_on_create] ||= []
+  options[:add_authorized_keys] ||= false
+  options[:url] ||= Docker.url
   on("-u", "--url URL", "Docker url to connect to")
   on("-L", "--list-images", "List available spoon images")
-  options[:image] = "spoon-pairing"
+  options[:image] ||= "spoon-pairing"
   on("-i", "--image NAME", "Use image for spoon instance")
-  options[:prefix] = 'spoon-'
+  options[:prefix] ||= 'spoon-'
   on("-p", "--prefix PREFIX", "Prefix for container names")
-  options[:command] = ''
-  options[:config] = "#{ENV['HOME']}/.spoonrc"
-  on("-c FILE", "--config", "Config file to use for spoon options")
+  options[:command] ||= ''
   on("-f", "--force", "Skip any confirmations")
   on("--debug", "Enable debug")
 
