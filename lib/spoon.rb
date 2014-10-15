@@ -61,12 +61,23 @@ module Spoon
   options[:command] = ''
   options[:config] = "#{ENV['HOME']}/.spoonrc"
   on("-c FILE", "--config", "Config file to use for spoon options")
+  on("-f", "--force", "Skip any confirmations")
   on("--debug", "Enable debug")
 
 
   arg(:instance, :optional, "Spoon instance to connect to")
 
   use_log_level_option
+
+  def self.confirm_delete?(name)
+    if options[:force]
+      return true
+    else
+      print "Are you sure you want to delete #{name}? (y/n) " 
+      answer = $stdin.gets.chomp.downcase
+      return answer == "y"
+    end
+  end
 
   def self.apply_prefix(name)
     "#{options[:prefix]}#{name}"
@@ -200,21 +211,25 @@ module Spoon
     container = get_container(name)
 
     if container
-      puts "Destroying #{name}"
-      begin
-        container.kill
-      rescue
-        puts "Failed to kill container #{container.id}"
-      end
+      if confirm_delete?(name)
+        puts "Destroying #{name}"
+        begin
+          container.kill
+        rescue
+          puts "Failed to kill container #{container.id}"
+        end
 
-      container.wait(10)
+        container.wait(10)
 
-      begin
-        container.delete(:force => true)
-      rescue
-        puts "Failed to remove container #{container.id}"
+        begin
+          container.delete(:force => true)
+        rescue
+          puts "Failed to remove container #{container.id}"
+        end
+        puts "Done!"
+      else
+        puts "Delete aborted.. #{name} lives to pair another day."
       end
-      puts "Done!"
     else
       puts "No container named: #{name}"
     end
