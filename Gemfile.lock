@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    docker-spoon (0.6.0)
+    docker-spoon (0.7.0)
       docker-api (~> 1.11)
       methadone (~> 1.4.0)
       rainbow (~> 2.0)
@@ -24,11 +24,11 @@ GEM
       multi_json (>= 1.7.5, < 2.0)
       multi_test (>= 0.1.1)
     diff-lcs (1.2.5)
-    docker-api (1.13.3)
+    docker-api (1.13.6)
       archive-tar-minitar
       excon (>= 0.38.0)
       json
-    excon (0.39.6)
+    excon (0.40.0)
     ffi (1.9.5)
     gherkin (2.12.2)
       multi_json (~> 1.3)
