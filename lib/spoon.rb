@@ -129,6 +129,7 @@ module Spoon
       instance_create(name)
       instance_copy_authorized_keys(name, options[:add_authorized_keys])
       instance_copy_files(name)
+      instance_run_actions(name)
     end
 
     container = get_container(name)
@@ -267,6 +268,21 @@ module Spoon
     end
   end
 
+  def self.instance_run_actions(name)
+    options[:run_on_create].each do |action|
+      puts "Running command: #{action}"
+      container = get_container(name)
+      host = URI.parse(options[:url]).host
+      if container
+        ssh_port = get_port('22', container)
+        puts "Waiting for #{name}:#{ssh_port}..." until host_available?(host, ssh_port)
+        system("ssh -o StrictHostKeyChecking=no -p #{ssh_port} pairing@#{host} #{action}")
+      else
+        puts "No container named: #{container.inspect}"
+      end
+    end
+  end
+
   def self.get_all_containers
     Docker::Container.all(:all => true)
   end
@@ -332,5 +348,3 @@ module Spoon
 
   go!
 end
-
-# option :debug, :type => :boolean, :default => true

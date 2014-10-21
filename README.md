@@ -198,6 +198,19 @@ Example:
 options[:add_authorized_keys] = "id_rsa.pub"
 ```
 
+  `run_on_create` - This is a list of commands to run on a spoon container
+  once it has been started. This allows you to quickly and automatically
+  modify a spoon environment upon creation to meet any needs you have
+  which aren't baked into the Docker image. This is a config-only
+	option, there is no command line for this. Commands are run one at a
+	time over ssh - enabling :add_authorized_keys makes this option more
+	tolerable.
+
+Example:
+```
+options[:run_on_create] = [ "sudo apt-get -y install emacs" ]
+```
+
 #### Container expectations
 
 When building an image for use with docker-spoon you must build an

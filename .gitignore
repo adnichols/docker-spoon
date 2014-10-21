@@ -3,4 +3,5 @@ results.html
 pkg
 html
 *.gem
-.spoonrc #used for testing
+.spoonrc
+spoonrc
