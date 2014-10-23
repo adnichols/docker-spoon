@@ -120,9 +120,15 @@ The `--destroy NAME` option will destroy the specified spoon container.
 
 ```shell
 $ spoon -d fortesting
+Are you sure you want to destroy spoon-fortesting? (y/n) y
 Destroying spoon-fortesting
 Done!
 ```
+
+To skip any confirmations:
+
+  * add `-f` or `--force` to the command-line
+  * add `options[:force] = true` to your `.spoonrc`.
 
 ### Network
 
