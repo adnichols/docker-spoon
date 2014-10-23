@@ -95,6 +95,11 @@ in.
 - `--image`, The image name to use when starting a spoon container.
 - `--prefix`, The prefix to use for creating, listing & destroying
   containers.
+- `--portforwards`, This is a space separated list of ports to forward
+  over ssh. The format is either `sourceport:destport` or  just `sourceport`
+  in which case the same port will be used for source & destination.
+	Multiple port forwards may be separated by spaces, for exampe
+	`--portforwards '8080 8081:9090'`
 
 ### List
 

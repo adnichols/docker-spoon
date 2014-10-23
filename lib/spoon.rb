@@ -64,6 +64,7 @@ module Spoon
   options[:command] ||= ''
   on("-f", "--force", "Skip any confirmations")
   on("--debug", "Enable debug")
+  on("-P PORT", "--portforwards", "Forward PORT over ssh (must be > 1023)")
 
 
   arg(:instance, :optional, "Spoon instance to connect to")
@@ -241,14 +242,26 @@ module Spoon
     get_container(name)
   end
 
+  def self.get_port_forwards(forwards = "")
+    if options[:portforwards]
+      options[:portforwards].split.each do |port|
+        (lport,rport) = port.split(':')
+        forwards << "-L #{lport}:127.0.0.1:#{rport || lport} "
+      end
+    end
+    return forwards
+  end
+
   def self.instance_ssh(name, command='')
     container = get_container(name)
+    forwards = get_port_forwards
+    D "Got forwards: #{forwards}"
     host = URI.parse(options[:url]).host
     if container
       ssh_command = "\"#{command}\"" if not command.empty?
       ssh_port = get_port('22', container)
       puts "Waiting for #{name}:#{ssh_port}..." until host_available?(host, ssh_port)
-      exec("ssh -t -o StrictHostKeyChecking=no -p #{ssh_port} pairing@#{host} #{ssh_command}")
+      exec("ssh -t -o StrictHostKeyChecking=no -p #{ssh_port} #{forwards} pairing@#{host} #{ssh_command}")
     else
       puts "No container named: #{container.inspect}"
     end
