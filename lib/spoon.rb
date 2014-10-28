@@ -53,6 +53,7 @@ module Spoon
   on("--pre-build-commands", "List of commands to run locally before building image")
   # These are config only options
   options[:copy_on_create] ||= []
+  options[:run_on_create] ||= []
   options[:add_authorized_keys] ||= false
   options[:url] ||= Docker.url
   on("-u", "--url URL", "Docker url to connect to")
@@ -64,6 +65,7 @@ module Spoon
   options[:command] ||= ''
   on("-f", "--force", "Skip any confirmations")
   on("--debug", "Enable debug")
+  on("--debugssh", "Enable SSH debugging")
   on("-P PORT", "--portforwards", "Forward PORT over ssh (must be > 1023)")
 
 
@@ -75,7 +77,7 @@ module Spoon
     if options[:force]
       return true
     else
-      print "Are you sure you want to delete #{name}? (y/n) " 
+      print "Are you sure you want to delete #{name}? (y/n) "
       answer = $stdin.gets.chomp.downcase
       return answer == "y"
     end
@@ -252,7 +254,7 @@ module Spoon
     return forwards
   end
 
-  def self.instance_ssh(name, command='')
+  def self.instance_ssh(name, command='', exec=true)
     container = get_container(name)
     forwards = get_port_forwards
     D "Got forwards: #{forwards}"
@@ -261,30 +263,36 @@ module Spoon
       ssh_command = "\"#{command}\"" if not command.empty?
       ssh_port = get_port('22', container)
       puts "Waiting for #{name}:#{ssh_port}..." until host_available?(host, ssh_port)
-      exec("ssh -t -o StrictHostKeyChecking=no -p #{ssh_port} #{forwards} pairing@#{host} #{ssh_command}")
+      ssh_options = "-t -o StrictHostKeyChecking=no -p #{ssh_port} #{forwards} "
+      ssh_options << "-v " if options[:debugssh]
+      ssh_cmd = "ssh #{ssh_options} pairing@#{host} #{ssh_command}"
+      D "SSH CMD: #{ssh_cmd}"
+      if exec
+        exec(ssh_cmd)
+      else
+        system(ssh_cmd)
+      end
     else
       puts "No container named: #{container.inspect}"
     end
   end
 
   def self.instance_copy_authorized_keys(name, keyfile)
+    D "Setting up authorized_keys file"
+    # We sleep this once to cope w/ slow starting ssh daemon on create
+    sleep 1
     if keyfile
-      container = get_container(name)
-      host = URI.parse(options[:url]).host
-      key = File.read("#{ENV['HOME']}/.ssh/#{keyfile}")
-      if container
-        ssh_port = get_port('22', container)
-        puts "Waiting for #{name}:#{ssh_port}..." until host_available?(host, ssh_port)
-        system("ssh -t -o StrictHostKeyChecking=no -p #{ssh_port} pairing@#{host} \"mkdir -p .ssh && chmod 700 .ssh && echo '#{key}' >> ~/.ssh/authorized_keys\"")
-      else
-        puts "No container named: #{container.inspect}"
-      end
+      full_keyfile = "#{ENV['HOME']}/.ssh/#{keyfile}"
+      key = File.read(full_keyfile).chop
+      D "Read keyfile `#{full_keyfile}` with contents:\n#{key}"
+      cmd = "mkdir -p .ssh ; chmod 700 .ssh ; echo '#{key}' >> .ssh/authorized_keys"
+      instance_ssh(name, cmd, false)
     end
   end
 
   def self.instance_copy_files(name)
     options[:copy_on_create].each do |file|
-      puts "Copying file #{file}"
+      D "Copying file #{file}"
       container = get_container(name)
       host = URI.parse(options[:url]).host
       if container
@@ -300,15 +308,7 @@ module Spoon
   def self.instance_run_actions(name)
     options[:run_on_create].each do |action|
       puts "Running command: #{action}"
-      container = get_container(name)
-      host = URI.parse(options[:url]).host
-      if container
-        ssh_port = get_port('22', container)
-        puts "Waiting for #{name}:#{ssh_port}..." until host_available?(host, ssh_port)
-        system("ssh -o StrictHostKeyChecking=no -p #{ssh_port} pairing@#{host} #{action}")
-      else
-        puts "No container named: #{container.inspect}"
-      end
+      instance_ssh(name, action, false)
     end
   end
 
