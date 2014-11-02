@@ -159,8 +159,11 @@ module Spoon
   def self.instance_list
     docker_url
     puts "List of available spoon containers:"
-    container_list = get_all_containers.select { |c| c.info["Names"].first.to_s.start_with? "/#{options[:prefix]}" }
-      .sort { |c1, c2| c1.info["Names"].first.to_s <=> c2.info["Names"].first.to_s }
+    container_list = get_spoon_containers
+    if container_list.empty?
+      puts "No spoon containers running at #{options[:url]}"
+      exit
+    end
     max_width_container_name = remove_prefix(container_list.max_by {|c| c.info["Names"].first.to_s.length }.info["Names"].first.to_s)
     max_name_width = max_width_container_name.length
     container_list.each do |container|
@@ -314,6 +317,15 @@ module Spoon
 
   def self.get_all_containers
     Docker::Container.all(:all => true)
+  end
+
+  def self.get_spoon_containers
+    container_list = get_all_containers.select { |c| c.info["Names"].first.to_s.start_with? "/#{options[:prefix]}" }
+    unless container_list.empty?
+      return container_list.sort { |c1, c2| c1.info["Names"].first.to_s <=> c2.info["Names"].first.to_s }
+    else
+      return container_list
+    end
   end
 
   def self.get_running_containers
