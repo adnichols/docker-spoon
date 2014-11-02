@@ -21,6 +21,7 @@ Spoon is intended to make this process as easy as possible.
 ```
 $ gem install docker-spoon
 ```
+(NOTE: if installing on Ubuntu this requires the installation of ruby-dev)
 
 ## Configuration
 
@@ -46,6 +47,18 @@ specified as a string.
 
 You may also specify a different config file with the `--config`
 argument.
+
+## Building a compatible image
+
+The spoon repository contains a functional spoon image. To build that just follow these steps:
+
+```
+git clone git@github.com:adnichols/docker-spoon.git
+cd docker-spoon/docker
+spoon -b 
+```
+
+This creates an image that matches the `option[:image]` configuration in your .spoonrc. 
 
 ## Usage
 
