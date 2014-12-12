@@ -23,6 +23,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('rdoc')
   spec.add_development_dependency('aruba')
   spec.add_development_dependency('rake', '~> 0.9.2')
-  spec.add_dependency('docker-api', '~> 1.13')
+  spec.add_dependency('docker-api', '~> 1.13.0')
   spec.add_dependency('rainbow', '~> 2.0')
 end
