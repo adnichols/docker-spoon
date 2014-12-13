@@ -64,6 +64,10 @@ module Spoon
         image_build
       elsif @options[:destroy]
         instance_destroy(apply_prefix(@options[:destroy]))
+      elsif @options[:kill]
+        instance_kill(apply_prefix(@options[:kill]))
+      elsif @options[:restart]
+        instance_restart(apply_prefix(@options[:restart]))
       elsif @options[:network]
         instance_network(apply_prefix(@options[:network]))
       elsif instance
@@ -95,6 +99,12 @@ module Spoon
         opts.on("-n", "--network NAME", "Display exposed ports using name passed to NAME") do |name|
           config[:network] = name
         end
+        opts.on("--restart NAME", "Restart the specified spoon instance") do |name|
+          config[:restart] = name
+        end
+        opts.on("--kill NAME", "Kill the specified spoon instance") do |name|
+          config[:kill] = name
+        end
 
         config[:config] = "#{ENV['HOME']}/.spoonrc"
         opts.on("-c", "--config FILE", "Config file to use for spoon @options") do |c|
@@ -105,19 +115,19 @@ module Spoon
           config[:builddir] = b
         end
 
-        opts.on("-u", "--url URL", "Docker url to connect to") do |url|
+        opts.on("--url URL", "Docker url to connect to") do |url|
           config[:url] = url
         end
 
-        opts.on("-L", "--list-images", "List available spoon images") do
+        opts.on("--list-images", "List available spoon images") do
           config["list-images"] = true
         end
 
-        opts.on("-i", "--image NAME", "Use image for spoon instance") do |image|
+        opts.on("--image NAME", "Use image for spoon instance") do |image|
           config[:image] = image
         end
 
-        opts.on("-p", "--prefix PREFIX", "Prefix for container names") do |prefix|
+        opts.on("--prefix PREFIX", "Prefix for container names") do |prefix|
           config[:prefix] = prefix
         end
 
@@ -125,8 +135,12 @@ module Spoon
           config[:privileged] = true
         end
 
-        opts.on("-f", "--force", "Skip any confirmations") do
+        opts.on("--force", "Skip any confirmations") do
           config[:force] = true
+        end
+
+        opts.on("--nologin", "Do not ssh to contianer, just create") do
+          config[:nologin] = true
         end
 
         opts.on("--debug", "Enable debug") do
@@ -135,6 +149,10 @@ module Spoon
 
         opts.on("--debugssh", "Enable SSH debugging") do
           config[:debugssh] = true
+        end
+
+        opts.on("-p PORT", "--ports", "Expose additional docker ports") do |ports|
+          config[:ports] = ports
         end
 
         opts.on("-P PORT", "--portforwards", "Forward PORT over ssh (must be > 1023)") do |portforwards|
@@ -151,6 +169,7 @@ module Spoon
           exit
         end
       end
+
       begin
         optparser.parse!(ARGV)
       rescue OptionParser::MissingArgument, OptionParser::InvalidOption
@@ -228,8 +247,9 @@ module Spoon
     def self.instance_connect(name, command='')
       docker_url
       if not instance_exists? name
-        puts "The `#{name}` container doesn't exist, creating..."
+        puts "The '#{name}' container doesn't exist, creating..."
         instance_create(name)
+        return if @options[:nologin]
         instance_copy_authorized_keys(name, @options[:add_authorized_keys])
         instance_copy_files(name)
         instance_run_actions(name)
@@ -240,8 +260,12 @@ module Spoon
         instance_start(container)
       end
 
-      puts "Connecting to `#{name}`"
-      instance_ssh(name, command)
+      unless @options[:nologin]
+        puts "Connecting to `#{name}`"
+        instance_ssh(name, command)
+      else
+        puts "Instance exists but nologin specified"
+      end
     end
 
     def self.instance_list
@@ -422,6 +446,19 @@ module Spoon
       container.start!
     end
 
+    def self.instance_restart(name)
+      container = get_container(name)
+      container.kill
+      container.start!
+      puts "Container #{name} restarted"
+    end
+
+    def self.instance_kill(name)
+      container = get_container(name)
+      container.kill
+      puts "Container #{name} killed"
+    end
+
     def self.get_container(name)
       docker_url
       container_list = get_all_containers
@@ -435,18 +472,41 @@ module Spoon
       return nil
     end
 
+    def self.container_config(name)
+      data = {
+        :Cmd => 'runit',
+        :Image => @options[:image],
+        :AttachStdout => true,
+        :AttachStderr => true,
+        :Privileged => @options[:privileged],
+        :PublishAllPorts => true,
+        :Tty => true
+      }
+      # Yes, this key must be a string
+      data['name'] = name
+      data[:CpuShares] = @options[:cpu] if @options[:cpu]
+      data[:Dns] = @options[:dns] if @options[:dns]
+      data[:Hostname] = remove_prefix(name)
+      data[:Memory] = @options[:memory] if @options[:memory]
+      ports = ['22'] + Array(@options[:ports]).map { |mapping| mapping.to_s }
+      ports.compact!
+      data[:PortSpecs] = ports
+      data[:PortBindings] = ports.inject({}) do |bindings, mapping|
+        guest_port, host_port = mapping.split(':').reverse
+        bindings["#{guest_port}/tcp"] = [{
+          :HostIp => '',
+          :HostPort => host_port || ''
+        }]
+        bindings
+      end
+      data[:Volumes] = Hash[Array(@options[:volume]).map { |volume| [volume, {}] }]
+      data
+    end
+
     def self.instance_create(name)
       docker_url
-      container = ::Docker::Container.create({
-        'Image' => @options[:image],
-        'name' => name,
-        'Entrypoint' => 'runit',
-        'Hostname' => remove_prefix(name)
-      })
-      container = container.start({
-        'PublishAllPorts' => true,
-        'Privileged' => @options[:privileged]
-      })
+      container = ::Docker::Container.create(container_config(name))
+      container = container.start(container_config(name))
     end
 
     def self.host_available?(hostname, port)
