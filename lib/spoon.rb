@@ -11,19 +11,24 @@ module Spoon
     attr_accessor :options
     @options = {}
 
+    # This combines our default configs with our command line and config file
+    # configurations in the desired precedence
     def self.combine_config
       config = self.parse(ARGV)
+
+      # init config only options
       @options["pre-build-commands"] = []
       @options[:copy_on_create] = []
       @options[:run_on_create] = []
       @options[:add_authorized_keys] = false
+      @options[:command] = ''
 
-      # Some @optionss
+      # init command line options
       @options[:builddir] = '.'
       @options[:url] = ::Docker.url
       @options[:image] = 'spoon-pairing'
       @options[:prefix] = 'spoon-'
-      @options[:command] = ''
+      @options[:privileged] ||= false
 
       # Eval config file
       D "Config file is: #{config[:config]}"
@@ -114,6 +119,10 @@ module Spoon
 
         opts.on("-p", "--prefix PREFIX", "Prefix for container names") do |prefix|
           config[:prefix] = prefix
+        end
+
+        opts.on("--privileged", "Enable privileged mode for new containers") do |privileged|
+          config[:privileged] = true
         end
 
         opts.on("-f", "--force", "Skip any confirmations") do
@@ -434,7 +443,10 @@ module Spoon
         'Entrypoint' => 'runit',
         'Hostname' => remove_prefix(name)
       })
-      container = container.start({ 'PublishAllPorts' => true })
+      container = container.start({
+        'PublishAllPorts' => true,
+        'Privileged' => @options[:privileged]
+      })
     end
 
     def self.host_available?(hostname, port)
