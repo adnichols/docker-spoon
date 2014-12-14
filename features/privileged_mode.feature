@@ -1,4 +1,4 @@
-@container_clean
+@build @clean
 Feature: Test privileged mode
 
   Scenario: Privileged mode defined in config file

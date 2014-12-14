@@ -212,6 +212,12 @@ module Spoon
       build_opts = { 't' => @options[:image], 'rm' => true }
       docker_connection = ::Docker::Connection.new(@options[:url], :read_timeout => 3000)
 
+      # Quick sanity check for Dockerfile
+      unless File.exist?("#{@options[:builddir]}/Dockerfile")
+        puts "Directory `#{@options[:builddir]}` must contain a Dockerfile... cannot continue"
+        exit(1)
+      end
+
       ::Docker::Image.build_from_dir(@options[:builddir], build_opts, docker_connection) do |chunk|
         print_docker_response(chunk)
       end

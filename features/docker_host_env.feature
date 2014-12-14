@@ -1,4 +1,4 @@
-@docker_config_test
+@docker_env
 Feature: Validate URL Config
 
   Scenario: Use DOCKER_HOST

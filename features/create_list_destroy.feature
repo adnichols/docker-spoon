@@ -1,4 +1,4 @@
-@container_clean
+@build @clean
 Feature: Creating, Listing, Killing, Restarting and Destroying containers works
 
   Scenario: Creating, Listing & Destroying containers works

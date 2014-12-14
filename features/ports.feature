@@ -1,5 +1,5 @@
-@container_clean
-Feature: Test privileged mode
+@build @clean
+Feature: Test port specification
 
   Scenario: Ports defined in config file with dynamic mapping
 
@@ -20,7 +20,7 @@ Feature: Test privileged mode
 		Host: 127.0.0.1
 		"""
 		And the output should contain "22 ->"
-		And the output should contain "19919 -> 49"
+		And the output should contain "19919 -> "
 
 	Scenario: Ports defined on command line with dynamic mapping
 
@@ -40,7 +40,7 @@ Feature: Test privileged mode
 		Host: 127.0.0.1
 		"""
 		And the output should contain "22 ->"
-		And the output should contain "19919 -> 49"
+		And the output should contain "19919 -> "
 
   Scenario: Ports defined in config file with static mapping
 
@@ -101,8 +101,8 @@ Feature: Test privileged mode
 		Host: 127.0.0.1
 		"""
 		And the output should contain "22 ->"
-		And the output should contain "19919 -> 49"
-		And the output should contain "18818 -> 49"
+		And the output should contain "19919 -> "
+		And the output should contain "18818 -> "
 
 	Scenario: Multiple ports defined, static
 
