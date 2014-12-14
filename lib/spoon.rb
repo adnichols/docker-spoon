@@ -35,6 +35,9 @@ module Spoon
       options = {}
       if File.exists?(config[:config])
         eval(File.read(config[:config]))
+      else
+        puts "File #{config[:config]} does not exist"
+        exit(1)
       end
 
       # Read in config file values
@@ -175,7 +178,7 @@ module Spoon
       rescue OptionParser::MissingArgument, OptionParser::InvalidOption
         puts $!.to_s
         puts optparser
-        exit
+        exit(1)
       end
       config
     end
