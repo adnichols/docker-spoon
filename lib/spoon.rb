@@ -154,7 +154,7 @@ module Spoon
           config[:debugssh] = true
         end
 
-        opts.on("-p PORT", "--ports", "Expose additional docker ports") do |ports|
+        opts.on("-p PORT", "--ports", Array, "Expose additional docker ports") do |ports|
           config[:ports] = ports
         end
 
