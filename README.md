@@ -162,7 +162,7 @@ Done!
 
 To skip any confirmations:
 
-  * add `-f` or `--force` to the command-line
+  * add `--force` to the command-line
   * add `options[:force] = true` to your `.spoonrc`.
 
 ### Kill
