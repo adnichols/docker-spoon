@@ -36,7 +36,10 @@ argument.
 ### Options
 
 #### url
-Forms: `--url`, `options[:url]`
+Forms:
+- `--url`
+- `options[:url]`
+
 Default: `ENV['DOCKER_HOST']`
 
 The url of the Docker API endpoint. This is in the format supported by
@@ -48,6 +51,7 @@ config or the command line then spoon will rely upon the value of
 Forms:
 - `--image IMAGE`
 - `options[:image] = "image"`
+
 Default: `spoon-pairing`
 
 The image name to use when starting a new spoon container. Note that
@@ -58,6 +62,7 @@ the two options are unrelated.
 Forms:
 - `--prefix PREFIX`
 - `options[:prefix] = "prefix"`
+
 Default: `spoon-`
 
 The prefix to use for naming containers. Container names are central to
@@ -69,6 +74,7 @@ groups to use different prefixes to lower the risk of name collisions.
 Forms: 
 - `--portforwards PORT[:PORT][,PORT]`
 - `options[:portforwards] = [ "1234", "1234:4321" ]`
+
 Default: none
 
 Sometimes you are developing in a spoon container and need to expose a
@@ -84,12 +90,14 @@ may be separated by commas, for exampe `--portforwards '8080,8081:9090'`
 Forms:
 - `--ports PORT[:PORT][,PORT]`
 - `options[:ports] = [ "1234", "1234:4321" ] `
+
 Default: none
 
 #### builddir
 Forms:
 - `--builddir DIRECTORY`
 - `options[:builddir] = "directory"`
+
 Default: `.`
 
 This is the directory where the build process will look for a Dockerfile
@@ -100,6 +108,7 @@ directory in which the spoon executable resides.
 #### pre-build-commands
 Forms:
 - `options[:"pre-build-commands"] = [ 'cmd1', 'cmd2' ]`
+
 Default: none
 
 This is a list of commands to run before actually kicking off the build
@@ -126,6 +135,7 @@ I need to get around to fixing and deprecating this format.
 #### copy_on_create
 Forms:
 - `options[:copy_on_create] = [ '/tmp/somefile', '/home/user/somefile' ]`
+
 Default: none
 
 This command will copy the list of specified files into the destionation
@@ -150,6 +160,7 @@ the .ssh directory in the example above.
 #### add_authorized_keys
 Forms:
 - `options[:add_authorized_keys] = "id_rsa.pub"`
+
 Default: none
 
 This allows you to specify an ssh public key that should reside in your
@@ -165,6 +176,8 @@ container if it doesn't already exist.
 #### run_on_create
 Forms:
 - `options[:run_on_create] = [ 'cmd1', 'cmd2' ]`
+
+Default: none
 
 This is a list of commands to run on a spoon container once it has been
 started. This allows you to quickly and automatically modify a spoon
