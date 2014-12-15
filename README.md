@@ -160,8 +160,6 @@ Destroying spoon-fortesting
 Done!
 ```
 
-The `--force` option may be used to avoid the confirmation prompt
-
 To skip any confirmations:
 
   * add `-f` or `--force` to the command-line
