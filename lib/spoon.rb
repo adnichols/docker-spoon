@@ -154,11 +154,11 @@ module Spoon
           config[:debugssh] = true
         end
 
-        opts.on("-p PORT", "--ports", Array, "Expose additional docker ports") do |ports|
+        opts.on("--ports PORT", Array, "Expose additional docker ports") do |ports|
           config[:ports] = ports
         end
 
-        opts.on("-P PORT", "--portforwards", "Forward PORT over ssh (must be > 1023)") do |portforwards|
+        opts.on("--portforwards PORT", Array, "Forward PORT over ssh (must be > 1023)") do |portforwards|
           config[:portforwards] = portforwards
         end
 
@@ -258,7 +258,6 @@ module Spoon
       if not instance_exists? name
         puts "The '#{name}' container doesn't exist, creating..."
         instance_create(name)
-        return if @options[:nologin]
         instance_copy_authorized_keys(name, @options[:add_authorized_keys])
         instance_copy_files(name)
         instance_run_actions(name)
@@ -269,12 +268,8 @@ module Spoon
         instance_start(container)
       end
 
-      unless @options[:nologin]
-        puts "Connecting to `#{name}`"
-        instance_ssh(name, command)
-      else
-        puts "Instance exists but nologin specified"
-      end
+      puts "Connecting to `#{name}`"
+      instance_ssh(name, command)
     end
 
     def self.instance_list
@@ -368,7 +363,7 @@ module Spoon
 
     def self.get_port_forwards(forwards = "")
       if @options[:portforwards]
-        @options[:portforwards].split.each do |port|
+        @options[:portforwards].each do |port|
           (lport,rport) = port.split(':')
           forwards << "-L #{lport}:127.0.0.1:#{rport || lport} "
         end
@@ -388,7 +383,9 @@ module Spoon
         ssh_options = "-t -o StrictHostKeyChecking=no -p #{ssh_port} #{forwards} "
         ssh_options << "-v " if @options[:debugssh]
         ssh_cmd = "ssh #{ssh_options} pairing@#{host} #{ssh_command}"
+        puts "SSH Forwards: #{forwards}" unless forwards.empty?
         D "SSH CMD: #{ssh_cmd}"
+        return if @options[:nologin]
         if exec
           exec(ssh_cmd)
         else
@@ -420,6 +417,7 @@ module Spoon
         if container
           ssh_port = get_port('22', container)
           puts "Waiting for #{name}:#{ssh_port}..." until host_available?(host, ssh_port)
+          return if @options[:nologin]
           system("scp -o StrictHostKeyChecking=no -P #{ssh_port} #{ENV['HOME']}/#{file} pairing@#{host}:#{file}")
         else
           puts "No container named: #{container.inspect}"

@@ -7,7 +7,7 @@ URL = "tcp://127.0.0.1:2375"
 IMAGE = "spoon_test"
 
 Before do
-  @aruba_timeout_seconds = 30
+  @aruba_timeout_seconds = 10
   # Using "announce" causes massive warnings on 1.9.2
   @puts = true
   @original_rubylib = ENV['RUBYLIB']
@@ -32,4 +32,8 @@ end
 
 Before('@build') do
   run_simple("spoon --url #{URL} --image #{IMAGE} --build --builddir ../../docker")
+end
+
+Before('@interact') do
+  @aruba_io_wait_seconds = 5
 end

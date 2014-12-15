@@ -16,14 +16,19 @@ Spoon is intended to make this process as easy as possible.
 #### Why Spoon?
 [Learn more about spooning](https://www.youtube.com/watch?v=dYBjVTMUQY0)
 
-## Installation
+
+## Getting Started
+These are the basics of how to get started. When you want to get into
+more detail see the [full usage](#full-usage) documentation.
+
+### Installation
 
 ```
 $ gem install docker-spoon
 ```
 (NOTE: if installing on Ubuntu this requires the installation of ruby-dev)
 
-## Configuration
+### Configuration
 
 Spoon has a number of options which you probably do not want to have to
 specify on the command line every time. The easiest way to set these for
@@ -39,39 +44,41 @@ options["pre-build-commands"] = [
 ]
 ```
 
-All of the `options[]` parameters should map directly to the long form
-of options on the command line. They may be defined as either the
-`:symbol` form or as a string. The limitation is that ruby doesn't
-permit a dash in symbols, so when an option has a dash in it, it must be
-specified as a string.
+The spoon configuration is described in more detail in the [spoon config
+page](README_config.md)
 
-You may also specify a different config file with the `--config`
-argument.
-
-## Building a compatible image
+### Building a compatible image
 
 The spoon repository contains a functional spoon image. To build that just follow these steps:
 
 ```
 git clone git@github.com:adnichols/docker-spoon.git
 cd docker-spoon/docker
-spoon -b 
+spoon -b
 ```
 
-This creates an image that matches the `option[:image]` configuration in your .spoonrc. 
+This creates an image that matches the default image name for spoon. If
+you specify a different image name in the configuration then that will
+be used when spoon builds an image.
 
-## Usage
+## Full Usage
 
-Spoon has 5 major operations it can perform:
+Spoon has a number of operations it can perform:
 
-- Connect/Create, Connect to an existing spoon container or create a new
-  container
-- List, List existing containers
-- Network, Show ports forwarded to existing containers
-- Build, Build an image for use as a spoon container
-- Destroy, Destroy an existing spoon container
+- [Create and Connect](#create-and-connect) to containers
+- [List](#list) existing containers
+- [List Images](#list-images) on the Docker host
+- [Network](#network) to show a containers network configuration
+- [Destroy](#destroy) a container
+- [Kill](#kill) containers
+- [Restart](#restart) containers
+- [Build](#build) an image from a Dockerfile for use with spoon
 
-### Connect/Create
+In addition to these operations there are configuration values which are
+supported on the command line or in the configuration file. See [Command
+Line Options](#command-line-options) for a list of tunables
+
+### Create and Connect
 
 By default when you call spoon with no options it will try to connect to
 the spoon container that you specify. If that container doesn't exist,
@@ -81,7 +88,7 @@ the host. This will shell out to ssh and should honor your ssh
 configuration locally.
 
 Example (container doesn't exist):
-```shell
+```
 $ spoon fortesting
 The `spoon-fortesting` container doesn't exist, creating...
 Connecting to `spoon-fortesting`
@@ -89,30 +96,14 @@ pairing@dockerhost's password:
 ```
 
 Example (container exists):
-```shell
+```
 $ spoon fortesting
 Connecting to `spoon-fortesting`
 pairing@dockerhost's password:
 ```
 
-NOTE: If a container has been stopped due to a machine restart or other
-reason, spoon will issue a start to the container & then attempt to ssh
-in.
-
-#### Options
-
-- `--url`, The url of the Docker API endpoint. This is in the format
-  supported by the docker -H option. This will also read from the
-  environment variable `DOCKER_HOST` if this argument is not specified
-  and that env var exists.
-- `--image`, The image name to use when starting a spoon container.
-- `--prefix`, The prefix to use for creating, listing & destroying
-  containers.
-- `--portforwards`, This is a space separated list of ports to forward
-  over ssh. The format is either `sourceport:destport` or  just `sourceport`
-  in which case the same port will be used for source & destination.
-	Multiple port forwards may be separated by spaces, for exampe
-	`--portforwards '8080 8081:9090'`
+NOTE: If a container has been stopped or killed, spoon will issue a
+start to the container & then attempt to ssh in.
 
 ### List
 
@@ -132,21 +123,18 @@ List of available spoon containers:
 You can connect to Stopped containers in the same way as Running
 containers, spoon will re-start them as necessary.
 
-### Destroy
+### List Images
 
-The `--destroy NAME` option will destroy the specified spoon container.
+The `--list-images` argument is conventient for listing the images available
+on the server. The image names should be exactly what you would use in the 
+`options[:image]` configuration value.
 
-```shell
-$ spoon -d fortesting
-Are you sure you want to destroy spoon-fortesting? (y/n) y
-Destroying spoon-fortesting
-Done!
+```
+$ spoon --list-images
+Image: ["spoon_test:latest"]
 ```
 
-To skip any confirmations:
-
-  * add `-f` or `--force` to the command-line
-  * add `options[:force] = true` to your `.spoonrc`.
+To use this image you would set `options[:image] = 'spoon_test'`
 
 ### Network
 
@@ -161,6 +149,37 @@ $ spoon -n jake
 22 -> 49213
 ```
 
+### Destroy
+
+The `--destroy NAME` option will destroy the specified spoon container.
+
+```shell
+$ spoon -d fortesting
+Are you sure you want to destroy spoon-fortesting? (y/n) y
+Destroying spoon-fortesting
+Done!
+```
+
+The `--force` option may be used to avoid the confirmation prompt
+
+To skip any confirmations:
+
+  * add `-f` or `--force` to the command-line
+  * add `options[:force] = true` to your `.spoonrc`.
+
+### Kill
+
+The `--kill NAME` option will kill a spoon container without destroying
+it. This is useful if you want to leave a container around but not in
+use for a period of time. Containers may be started again simply by
+connecting to them.
+
+### Restart
+
+The `--restart NAME` option will kill and then start a container. This
+is useful if you have a container which has gotten into a bad state or
+where you've started processes you simply want to easily kill off. 
+
 ### Build
 
 The `--build` option will build a docker image from the build directory
@@ -169,71 +188,40 @@ as the [docker
 build](https://docs.docker.com/reference/commandline/cli/#build)
 command.
 
-#### Options
+## Command Line Options
+
+The following options may be specified either on the command line or in
+the spoon [configuration file](README_config.md). Note that command line
+options take precedence over options in the configuration file. 
 
 - `--builddir`, This is the directory where the build process will look
   for a Dockerfile and any content added to the container using `ADD`.
+- `--config`, configuration file to read, defaults to `~/.spoonrc`
+- `--image`, The image name to use when starting a spoon container.
+- `--portforwards`, This is a comma separated list of ports to forward
+  over ssh. The format is either `sourceport:destport` or  just
+  `sourceport` in which case the same port will be used for source &
+  destination.  This may be used after container creation to add ports
+  ad-hoc
+- `--ports`, Comma separated list of ports to expose upon container
+  creation by Docker. Unlike `--portforwards` this is only available at
+	container creation
+- `--prefix`, The prefix to use for creating, listing & destroying
+  containers.
+- `--privileged`, Starts a new container in with Privileged mode true,
+  only applicable on container creation.
+- `--url`, The url of the Docker API endpoint. This is in the format
+  supported by the docker -H option. This will also read from the
+environment variable `DOCKER_HOST` if this argument is not specified and
+that env var exists.
+- `--nologin`, This option is used for testing. It performs all actions
+  up to the point of executing an ssh connection and then returns.
+- `--debug`, Enables some debugging
+- `--debugssh`, Enables SSH debugging
+- `--version`, Shows the version
 
-- `--pre-build-commands`, This is a list of commands to run before
-  actually kicking off the build process (see below).
-
-pre-build-commands:
-
-Because docker-spoon is special, we also support running some
-commands in advance of the build process. This allows for things like
-copying stuff into the container which you don't want to have committed
-to the repository. An example of this is that in our environment we need
-chef credentials inside of our container & we use this mechanism to copy
-those credentials into the builddir at build time without adding them to
-our repository containing the Dockerfile.
-
-Here's an example of how we copy our chef configuration into place:
-```ruby
-options["pre-build-commands"] = [
-  "cp -rp #{ENV['HOME']}/.chef #{options[:builddir]}/chef"
-]
-```
-
-- `copy_on_create`, - This is a config-only value, there is no command
-  line argument for it. The idea is that you can specify a list of files
-  to copy into place on the destination container upon creation. This is
-  useful if you want to copy in place configs that you keep on your
-  workstation but don't want them as part of the image.
-
-Example:
-```
-options[:copy_on_create] = [
-  ".gitconfig",
-  ".ssh",
-  ".ssh/config"
-]
-```
-NOTE: this does not create any required parent directories on the
-destination system unless they are copied into place, for example like
-the .ssh directory in the example above.
-
-- `add_authorized_keys` - This is a config-only value. This allows you
-  to specify an ssh public key that should reside in your own `~/.ssh`
-  directory to be placed in authorized_keys on the destination system
-  upon container creation.
-
-Example:
-```
-options[:add_authorized_keys] = "id_rsa.pub"
-```
-
-  `run_on_create` - This is a list of commands to run on a spoon container
-  once it has been started. This allows you to quickly and automatically
-  modify a spoon environment upon creation to meet any needs you have
-  which aren't baked into the Docker image. This is a config-only
-	option, there is no command line for this. Commands are run one at a
-	time over ssh - enabling :add_authorized_keys makes this option more
-	tolerable.
-
-Example:
-```
-options[:run_on_create] = [ "sudo apt-get -y install emacs" ]
-```
+These options and others are described in greater detail in the [configuration
+file](README_config.md) documentation.
 
 #### Container expectations
 
@@ -246,7 +234,8 @@ directory inside this repository
 
 1. Fork it ( https://github.com/adnichols/docker-spoon/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
+3. Make your changes, add tests and make sure all tests pass (`rake`)
+4. Commit your changes (`git commit -am 'Add some feature'`)
+5. Push to the branch (`git push origin my-new-feature`)
+6. Create a new Pull Request
 
