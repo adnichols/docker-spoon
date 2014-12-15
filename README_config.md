@@ -35,6 +35,42 @@ argument.
 
 ### Options
 
+#### cpu
+Forms:
+- `options[:cpu] = 1`
+
+Default: 0
+
+Configures priority of [CPU
+shares](https://docs.docker.com/reference/run/#runtime-constraints-on-cpu-and-memory).
+
+#### memory
+Forms:
+- `options[:memory] = "50m"`
+
+Default: unlimited
+
+Configures [memory
+constraints](https://docs.docker.com/reference/run/#runtime-constraints-on-cpu-and-memory).
+
+#### dns
+Forms:
+- `options[:dns] = [ "8.8.8.8", "8.8.4.4" ]`
+
+Default: (Docker default)
+
+Configures DNS servers for the container to use.
+
+#### volume
+Forms:
+- `options[:volume] = [ '/vol1', '/hostdir:/vol2' ]`
+
+Default: none
+
+This creates a volume mapping in the container to a directory on the
+Docker host. This should work much like the `-v` argument in the docker
+cli
+
 #### url
 Forms:
 - `--url`
@@ -71,7 +107,7 @@ easy to remember for their containers. The prefix allows different
 groups to use different prefixes to lower the risk of name collisions.
 
 #### portforwards
-Forms: 
+Forms:
 - `--portforwards PORT[:PORT][,PORT]`
 - `options[:portforwards] = [ "1234", "1234:4321" ]`
 
@@ -79,7 +115,7 @@ Default: none
 
 Sometimes you are developing in a spoon container and need to expose a
 new port without destroying the container & starting over. This option
-enables this by using ssh port forwarding. 
+enables this by using ssh port forwarding.
 
 This is a comma separated list of ports to forward over ssh. The format
 is either `sourceport:destport` or  just `sourceport` in which case the
@@ -92,6 +128,26 @@ Forms:
 - `options[:ports] = [ "1234", "1234:4321" ] `
 
 Default: none
+
+This option exposes additional ports using Docker when the container is
+created. By default any ports defined by `EXPOSE` in the Dockerfile are
+exposed to the container. This options allows you to both expose
+additional ports via Docker, or map those exposed ports to specific
+ports instead of using the dynamic Docker assigned ports.
+
+Default: none
+
+#### privileged
+Forms:
+- `--privileged`
+- `options[:privileged] = true`
+
+Default: false
+
+This is a boolean which enables
+[Privileged](https://docs.docker.com/reference/run/#runtime-privilege-linux-capabilities-and-lxc-configuration)
+mode on container creation.  This may be necessary for some operations
+to succeed inside the container.
 
 #### builddir
 Forms:
@@ -107,7 +163,7 @@ directory in which the spoon executable resides.
 
 #### pre-build-commands
 Forms:
-- `options[:"pre-build-commands"] = [ 'cmd1', 'cmd2' ]`
+- `options["pre-build-commands"] = [ 'cmd1', 'cmd2' ]`
 
 Default: none
 
@@ -134,17 +190,17 @@ I need to get around to fixing and deprecating this format.
 
 #### copy_on_create
 Forms:
-- `options[:copy_on_create] = [ '/tmp/somefile', '/home/user/somefile' ]`
+- `options[:copy_on_create] = [ 'somefile', 'otherfile' ]`
 
 Default: none
 
 This command will copy the list of specified files into the destionation
 container upon container creation. These will be copied from the source
 system relative to your home directory and placed in the destination
-container at the same location (relative to your home directory). 
+container at the same location (relative to your home directory).
 
 This is handy for adding any custom configurations you require which you
-may not want to bake into your Docker image. 
+may not want to bake into your Docker image.
 
 Example:
 ```
@@ -153,9 +209,10 @@ options[:copy_on_create] = [
   ".ssh/config"
 ]
 ```
+
 NOTE: this does not create any required parent directories on the
-destination system unless they are copied into place, for example like
-the .ssh directory in the example above.
+destination system unless they are copied into place, for example the
+.ssh directory in the example above.
 
 #### add_authorized_keys
 Forms:
