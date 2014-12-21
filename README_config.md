@@ -73,8 +73,8 @@ cli
 
 #### url
 Forms:
-- `--url`
-- `options[:url]`
+- `--url URL`
+- `options[:url] = "tcp://127.0.0.1:2375"`
 
 Default: `ENV['DOCKER_HOST']`
 
