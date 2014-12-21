@@ -7,6 +7,7 @@ Feature: Creating, Listing, Killing, Restarting and Destroying containers works
 		"""
 		options[:url] = "tcp://127.0.0.1:2375"
 		options[:image] = "spoon_test"
+		options[:prefix] = "test-"
 		"""
 
 		When I run `spoon -c spoon_config -l`
@@ -20,7 +21,7 @@ Feature: Creating, Listing, Killing, Restarting and Destroying containers works
 		Then the exit status should be 0
 		And the output should contain:
 		"""
-		The 'spoon-testcontainer19919' container doesn't exist, creating...
+		The 'test-testcontainer19919' container doesn't exist, creating...
 		"""
 
 		When I run `spoon -c spoon_config -l`
@@ -38,7 +39,7 @@ Feature: Creating, Listing, Killing, Restarting and Destroying containers works
 		Then the exit status should be 0
 		And the output should contain:
 		"""
-		Container spoon-testcontainer19919 killed
+		Container test-testcontainer19919 killed
 		"""
 
 		When I run `spoon -c spoon_config -l`
@@ -52,7 +53,7 @@ Feature: Creating, Listing, Killing, Restarting and Destroying containers works
 		Then the exit status should be 0
 		And the output should contain:
 		"""
-		Container spoon-testcontainer19919 restarted
+		Container test-testcontainer19919 restarted
 		"""
 
 		When I run `spoon -c spoon_config -l`
@@ -75,6 +76,6 @@ Feature: Creating, Listing, Killing, Restarting and Destroying containers works
 		Then the exit status should be 0
 		And the output should contain:
 		"""
-		Destroying spoon-testcontainer19919
+		Destroying test-testcontainer19919
 		Done!
 		"""

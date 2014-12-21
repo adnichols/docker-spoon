@@ -9,7 +9,7 @@ Feature: Validate URL Config
 		options[:image] = "spoon_test"
 		"""
 
-		When I run `spoon -c /dev/null -l`
+		When I run `spoon -c /dev/null --prefix "test-" -l`
 		Then the exit status should be 0
 		And the output should contain:
 		"""
