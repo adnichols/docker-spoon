@@ -85,7 +85,7 @@ module Spoon
       config = {}
       optparser = OptionParser.new do |opts|
 
-        opts.banner = "Usage: spoon [@options] [instance name]\n\n"
+        opts.banner = "Usage: spoon [options] [instance name]\n\n"
         opts.banner += "Create & Connect to pairing environments in Docker\n\n"
 
         opts.program_name = "spoon"
