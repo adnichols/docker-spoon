@@ -1,0 +1,9 @@
+image: ruby2.0.0
+env:
+script:
+  - bundle install
+  - bundle exec rake
+notify:
+  email:
+    recipients:
+      - anichols@trumped.org
